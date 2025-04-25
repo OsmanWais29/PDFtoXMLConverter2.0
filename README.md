@@ -1,40 +1,118 @@
-# PDF-to-XML-Converter
-# Project under CITI Summer Intern Pune 
+# PDF to XML Converter
 
-### Documentation for this project can be found at [PDF to XML Converter Documentation](https://srijansankrit.github.io/PDF-to-XML-Converter/com/PDFtoXMLConverter/package-summary.html).
+A complete application designed for converting bankruptcy Form 31 documents to XML format compliant with the ISED (Innovation, Science and Economic Development) Canada e-filing system schema.
 
-### **Team Members**
+## Features
 
-  1. Srijan Sankrit (IITG)
-  2. Bhavya Sharma (IITG)
-  3. Kushagra Pandey (IITG)
+- Convert Form 31 bankruptcy PDFs to ISED-compliant XML format
+- Validate generated XML against official schema
+- Upload and process multiple PDF files simultaneously
+- Download converted XML files
+- Track conversion status
+- Simple and intuitive web interface
+- Comprehensive API for integration with other systems
 
-##  **Idea**
- 
-To extract business information from a PDF document and convert it into an XML document.
+## Quick Start
 
-#### **Product Description**
+### Prerequisites
 
-Our product can be used to convert various business documents, with support for multiple page PDF conversion and password-encrypted PDF conversion. It uses a config file for detecting a table in a typical invoice.
-User has the option to supply his custom words before extraction.
+- Node.js 14.x or higher
+- Java Runtime Environment (JRE) 11 or higher
+- NPM or Yarn
 
-Not a standard invoice? Don't worry, Our product is capable of converting non-standard invoice document into proper structured XML Document.
+### Installation
 
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/OsmanWais29/PDFtoXMLConverter2.0.git
+   cd PDFtoXMLConverter2.0
+   ```
 
-## **Libraries used**
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-[![PdfBox Version](https://img.shields.io/badge/pdfbox-20.0.19-brightgreen.svg)](https://pdfbox.apache.org/index.html)
-[![JDK Version](https://img.shields.io/badge/JDK-14-brightgreen.svg)](https://docs.oracle.com/en/java/javase/14/)
-[![XML_DOM Version](https://img.shields.io/badge/JAXP-1.4.2-brightgreen.svg)](https://mvnrepository.com/artifact/javax.xml/jaxp-api/1.4.2)
-[![SWT Version](https://img.shields.io/badge/WindowBuilder-1.9.2-brightgreen.svg)](https://projects.eclipse.org/projects/tools.windowbuilder/releases/1.9.2)
-[![Log4j2 Version](https://img.shields.io/badge/Log4j2-2.13.2-brightgreen.svg)](https://logging.apache.org/log4j/2.x/)
+3. Start the application:
+   ```bash
+   npm start
+   ```
 
-## Instructions for using our product
+4. Open your browser and navigate to:
+   ```
+   http://localhost:8080
+   ```
 
-1. Open the folder named **Converter** which has **PDFtoXML.jar** file along with some properties files.
-2. User has option to edit the keywords for table extraction inside the **config.properties** file.
-3. Open the jar file named PDFtoXML.jar
-4. Select the PDF file to be extracted by 'Choose' button.
-5. Select the pages to be extracted or enter * for all pages in the file.
-6. Add the password only if required.
-7. Generate the XML in the same folder as of JAR by simply clicking on 'Generate XML', with name designating the time of creation, along with a log file generated in the same directory named **LogToFile**.
+### Using Docker
+
+1. Build the Docker image:
+   ```bash
+   docker build -t pdftoxmlconverter .
+   ```
+
+2. Run the container:
+   ```bash
+   docker run -p 8080:8080 pdftoxmlconverter
+   ```
+
+## Documentation
+
+- [API Documentation](./docs/api/README.md)
+- [User Guide](./docs/user-guide/README.md)
+- [Development Guide](./docs/development/README.md)
+
+## Project Structure
+
+```
+PDFtoXMLConverter/
+├── src/
+│   ├── api/
+│   │   ├── routes/            # API routes
+│   │   ├── middleware/        # Middleware components
+│   │   └── controllers/       # API controllers
+│   ├── services/              # Business logic services
+│   ├── models/                # Data models
+│   ├── utils/                 # Utility functions
+│   ├── config/                # Configuration files
+│   └── app.js                 # Main application entry point
+├── test/                      # Test files
+├── public/                    # Frontend files
+├── uploads/                   # Temporary storage for uploaded PDFs
+├── output/                    # Generated XML files
+├── schema/                    # XML schema definitions
+├── .github/                   # GitHub configurations
+└── docs/                      # Documentation
+```
+
+## Development
+
+### Running in Development Mode
+
+```bash
+npm run dev
+```
+
+### Running Tests
+
+```bash
+npm test
+```
+
+### Linting
+
+```bash
+npm run lint
+```
+
+## Contributing
+
+Please read our [Contributing Guide](./docs/development/README.md) for details on our code of conduct and the process for submitting pull requests.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- ISED Canada for providing the XML schema specifications
+- Contributors to open-source libraries used in this project

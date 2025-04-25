@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+           targetNamespace="https://ised-isde.canada.ca/bankruptcy/form31"
+           xmlns="https://ised-isde.canada.ca/bankruptcy/form31"
+           elementFormDefault="qualified">
+
+  <!-- Root element -->
+  <xs:element name="bankruptcyForm31">
+    <xs:complexType>
+      <xs:sequence>
+        <!-- Document metadata -->
+        <xs:element name="metadata" type="MetadataType"/>
+        
+        <!-- Case information -->
+        <xs:element name="caseInfo" type="CaseInfoType"/>
+        
+        <!-- Debtor information -->
+        <xs:element name="debtor" type="DebtorType"/>
+        
+        <!-- Creditor information -->
+        <xs:element name="creditors" type="CreditorsType"/>
+        
+        <!-- Assets and liabilities -->
+        <xs:element name="assetsAndLiabilities" type="AssetsAndLiabilitiesType"/>
+        
+        <!-- Signatures -->
+        <xs:element name="signatures" type="SignaturesType"/>
+      </xs:sequence>
+      <xs:attribute name="version" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!-- Metadata type definition -->
+  <xs:complexType name="MetadataType">
+    <xs:sequence>
+      <xs:element name="generatedTimestamp" type="xs:dateTime"/>
+      <xs:element name="sourceFile" type="xs:string"/>
+      <xs:element name="generatedBy" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <!-- Case information type definition -->
+  <xs:complexType name="CaseInfoType">
+    <xs:sequence>
+      <xs:element name="courtFileNumber" type="xs:string"/>
+      <xs:element name="dateOfFiling" type="xs:date"/>
+      <xs:element name="district" type="xs:string"/>
+      <xs:element name="division" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <!-- Debtor information type definition -->
+  <xs:complexType name="DebtorType">
+    <xs:sequence>
+      <xs:element name="name" type="PersonNameType"/>
+      <xs:element name="address" type="AddressType"/>
+      <xs:element name="contactInfo" type="ContactInfoType"/>
+      <xs:element name="occupation" type="xs:string"/>
+      <xs:element name="employer" type="xs:string" minOccurs="0"/>
+      <xs:element name="dateOfBirth" type="xs:date"/>
+      <xs:element name="SIN" type="SINType"/>
+    </xs:sequence>
+    <xs:attribute name="type" type="DebtorTypeEnum" use="required"/>
+  </xs:complexType>
+  
+  <!-- Person name type -->
+  <xs:complexType name="PersonNameType">
+    <xs:sequence>
+      <xs:element name="firstName" type="xs:string"/>
+      <xs:element name="middleName" type="xs:string" minOccurs="0"/>
+      <xs:element name="lastName" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <!-- Address type -->
+  <xs:complexType name="AddressType">
+    <xs:sequence>
+      <xs:element name="streetNumber" type="xs:string" minOccurs="0"/>
+      <xs:element name="streetName" type="xs:string"/>
+      <xs:element name="city" type="xs:string"/>
+      <xs:element name="province" type="ProvinceType"/>
+      <xs:element name="postalCode" type="PostalCodeType"/>
+      <xs:element name="country" type="xs:string" default="Canada"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <!-- Contact information type -->
+  <xs:complexType name="ContactInfoType">
+    <xs:sequence>
+      <xs:element name="telephone" type="PhoneNumberType"/>
+      <xs:element name="email" type="EmailType" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <!-- Creditors information type -->
+  <xs:complexType name="CreditorsType">
+    <xs:sequence>
+      <xs:element name="creditor" type="CreditorType" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="totalUnsecured" type="MoneyType"/>
+      <xs:element name="totalSecured" type="MoneyType"/>
+      <xs:element name="totalPreferred" type="MoneyType"/>
+      <xs:element name="grandTotal" type="MoneyType"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <!-- Individual creditor type -->
+  <xs:complexType name="CreditorType">
+    <xs:sequence>
+      <xs:element name="name" type="xs:string"/>
+      <xs:element name="address" type="AddressType"/>
+      <xs:element name="amount" type="MoneyType"/>
+      <xs:element name="natureOfClaim" type="xs:string"/>
+    </xs:sequence>
+    <xs:attribute name="type" type="CreditorTypeEnum" use="required"/>
+  </xs:complexType>
+  
+  <!-- Assets and liabilities type -->
+  <xs:complexType name="AssetsAndLiabilitiesType">
+    <xs:sequence>
+      <xs:element name="totalAssets" type="MoneyType"/>
+      <xs:element name="totalLiabilities" type="MoneyType"/>
+      <xs:element name="deficiency" type="MoneyType"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <!-- Signatures type -->
+  <xs:complexType name="SignaturesType">
+    <xs:sequence>
+      <xs:element name="debtorSignature" type="SignatureType"/>
+      <xs:element name="witnessSignature" type="SignatureType" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <!-- Signature type -->
+  <xs:complexType name="SignatureType">
+    <xs:sequence>
+      <xs:element name="name" type="xs:string"/>
+      <xs:element name="date" type="xs:date"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <!-- Simple types and enumerations -->
+  
+  <!-- SIN type with validation pattern -->
+  <xs:simpleType name="SINType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="\d{3}-\d{3}-\d{3}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
+  <!-- Postal code type with Canadian format -->
+  <xs:simpleType name="PostalCodeType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[A-Za-z]\d[A-Za-z] \d[A-Za-z]\d"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
+  <!-- Email type with basic validation -->
+  <xs:simpleType name="EmailType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[^@]+@[^\.]+\..+"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
+  <!-- Phone number type -->
+  <xs:simpleType name="PhoneNumberType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="\d{3}-\d{3}-\d{4}"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
+  <!-- Money type -->
+  <xs:simpleType name="MoneyType">
+    <xs:restriction base="xs:decimal">
+      <xs:fractionDigits value="2"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
+  <!-- Province enumeration -->
+  <xs:simpleType name="ProvinceType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="AB"/>
+      <xs:enumeration value="BC"/>
+      <xs:enumeration value="MB"/>
+      <xs:enumeration value="NB"/>
+      <xs:enumeration value="NL"/>
+      <xs:enumeration value="NS"/>
+      <xs:enumeration value="NT"/>
+      <xs:enumeration value="NU"/>
+      <xs:enumeration value="ON"/>
+      <xs:enumeration value="PE"/>
+      <xs:enumeration value="QC"/>
+      <xs:enumeration value="SK"/>
+      <xs:enumeration value="YT"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
+  <!-- Debtor type enumeration -->
+  <xs:simpleType name="DebtorTypeEnum">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="individual"/>
+      <xs:enumeration value="corporation"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
+  <!-- Creditor type enumeration -->
+  <xs:simpleType name="CreditorTypeEnum">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="unsecured"/>
+      <xs:enumeration value="secured"/>
+      <xs:enumeration value="preferred"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
+</xs:schema>

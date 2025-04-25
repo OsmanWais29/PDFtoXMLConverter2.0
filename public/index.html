@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF to XML Converter - Form 31</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>PDF to XML Converter</h1>
+            <p>Convert bankruptcy Form 31 documents to ISED Canada compliant XML format</p>
+        </header>
+
+        <main>
+            <section class="upload-section">
+                <h2>Upload PDF Files</h2>
+                
+                <form id="upload-form" enctype="multipart/form-data">
+                    <div class="file-drop-area" id="drop-area">
+                        <div class="file-input-container">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Drag & Drop PDF files here or</p>
+                            <label for="file-input" class="file-input-label">Browse Files</label>
+                            <input type="file" id="file-input" name="files" accept=".pdf" multiple>
+                        </div>
+                    </div>
+                    
+                    <div class="selected-files" id="selected-files">
+                        <h3>Selected Files</h3>
+                        <ul id="file-list"></ul>
+                    </div>
+                    
+                    <div class="controls">
+                        <button type="submit" id="convert-btn">Convert to XML</button>
+                        <button type="reset" id="clear-btn">Clear</button>
+                    </div>
+                </form>
+            </section>
+
+            <section class="results-section" id="results-section">
+                <h2>Conversion Results</h2>
+                <div id="conversion-spinner" class="spinner hidden">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Converting files...</p>
+                </div>
+                <div id="conversion-results">
+                    <!-- Results will be populated here -->
+                </div>
+            </section>
+        </main>
+
+        <section class="help-section">
+            <h2>Help & Information</h2>
+            <div class="accordion" id="help-accordion">
+                <div class="accordion-item">
+                    <button class="accordion-header">Supported File Formats</button>
+                    <div class="accordion-content">
+                        <p>This application accepts PDF files containing Form 31 bankruptcy documents. The PDF files can be:</p>
+                        <ul>
+                            <li>Fillable PDF forms that have been completed electronically</li>
+                            <li>Scanned documents of completed Form 31 (OCR will be attempted)</li>
+                        </ul>
+                        <p>Maximum file size: 10MB per file</p>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <button class="accordion-header">XML Output Format</button>
+                    <div class="accordion-content">
+                        <p>The generated XML files comply with the ISED (Innovation, Science and Economic Development) Canada e-filing system schema for bankruptcy Form 31.</p>
+                        <p>XML files include all necessary elements and attributes required for successful e-filing with the Canadian government system.</p>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <button class="accordion-header">Error Handling</button>
+                    <div class="accordion-content">
+                        <p>Common errors include:</p>
+                        <ul>
+                            <li>Password-protected or encrypted PDF files cannot be processed</li>
+                            <li>PDFs with missing required fields may generate incomplete XML</li>
+                            <li>Scanned documents with poor quality may result in extraction errors</li>
+                        </ul>
+                        <p>All conversion results provide detailed error messages to help troubleshoot issues.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <p>&copy; 2025 PDF to XML Converter. All rights reserved.</p>
+            <p>For questions or support, please visit our <a href="https://github.com/OsmanWais29/PDFtoXMLConverter" target="_blank">GitHub repository</a>.</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
