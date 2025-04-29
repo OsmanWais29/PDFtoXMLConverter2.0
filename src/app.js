@@ -1,73 +1,195 @@
 /**
- * PDF to XML Converter Application
+ * PDF-to-XML-Converter Application
  * Main application entry point
  */
 const express = require('express');
+const mongoose = require('mongoose');
+const compression = require('compression');
+const morgan = require('morgan');
 const path = require('path');
 const fs = require('fs');
+const helmet = require('helmet');
+const xss = require('xss-clean');
 const cors = require('cors');
+const hpp = require('hpp');
+const rateLimit = require('express-rate-limit');
 const config = require('./config/app');
-const convertRoutes = require('./api/routes/convert');
-const { errorConverter, errorHandler } = require('./utils/errorHandler');
+const logger = require('./utils/logger');
+const routes = require('./api/routes');
+const security = require('./middleware/security');
+const errorHandler = require('./middleware/errorHandler');
+const { metricsMiddleware } = require('./utils/metrics');
 
-// Initialize Express app
+// Create Express application
 const app = express();
 
+// Initialize OpenTelemetry for distributed tracing
+const { initializeOpenTelemetry } = require('./utils/metrics');
+initializeOpenTelemetry();
+
 // Ensure required directories exist
-const directories = [
-  config.paths.uploads,
-  config.paths.output,
-  config.paths.public
+const requiredDirs = [
+  config.uploadDir, 
+  config.outputDir,
+  config.tempDir
 ];
 
-directories.forEach(dir => {
+for (const dir of requiredDirs) {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
+    logger.info(`Created directory: ${dir}`);
   }
-});
-
-// Set up middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static(config.paths.public));
-
-// Request logging middleware
-app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
-  next();
-});
-
-// API Routes
-app.use('/api', convertRoutes);
-
-// Catch-all route to serve the index.html for any unmatched routes
-app.get('*', (req, res) => {
-  res.sendFile(path.join(config.paths.public, 'index.html'));
-});
-
-// Error handling
-app.use(errorConverter);
-app.use(errorHandler);
-
-// Start the server only if the file is run directly
-if (require.main === module) {
-  app.listen(config.port, () => {
-    console.log('---------------------------------------------------');
-    console.log(`PDFtoXMLConverter server started!`);
-    console.log(`Access the application at:`);
-    console.log(`  • http://localhost:${config.port}`);
-    console.log(`  • http://127.0.0.1:${config.port}`);
-    console.log('---------------------------------------------------');
-  }).on('error', (err) => {
-    console.error('Failed to start server:', err.message);
-  });
 }
 
-// Handle process errors
-process.on('uncaughtException', (err) => {
-  console.error('Uncaught exception:', err);
+// Configure security middleware
+security.configureSecurityMiddleware(app);
+
+// Set security HTTP headers
+app.use(helmet());
+
+// Set up CORS
+app.use(cors());
+
+// Configure request body parsing
+app.use(express.json({ limit: config.maxUploadSize }));
+app.use(express.urlencoded({ extended: true, limit: config.maxUploadSize }));
+
+// Add compression for HTTP responses
+app.use(compression());
+
+// Clean data to prevent XSS attacks
+app.use(xss());
+
+// Prevent HTTP parameter pollution
+app.use(hpp());
+
+// Add metrics middleware
+app.use(metricsMiddleware);
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: 'Too many requests from this IP, please try again later.'
+});
+app.use('/api/', limiter);
+
+// Configure request logging
+if (config.isDevelopment) {
+  app.use(morgan('dev'));
+} else {
+  app.use(logger.logRequest);
+}
+
+// Add security event logging
+app.use(security.securityEventLogger);
+
+// Serve static files
+app.use(express.static(path.join(__dirname, '../public')));
+
+// Healthcheck endpoint for monitoring
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    version: config.version,
+    environment: config.env
+  });
 });
 
-// Export the app for testing
-module.exports = app;
+// API Routes - secured with API key authentication
+app.use('/api', security.authenticateRequest, routes);
+
+// Handle 404s
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    error: 'Not Found',
+    message: 'The requested resource could not be found'
+  });
+});
+
+// Global error handler
+app.use(errorHandler);
+
+// Database connection
+async function connectToDatabase() {
+  try {
+    if (!config.mongoUri) {
+      throw new Error('MongoDB connection URI is not provided');
+    }
+    
+    // Configure MongoDB connection
+    const mongoOptions = {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 5000
+    };
+    
+    // Connect to MongoDB
+    await mongoose.connect(config.mongoUri, mongoOptions);
+    logger.info('Connected to MongoDB successfully');
+  } catch (error) {
+    logger.error(`Database connection error: ${error.message}`, { error });
+    process.exit(1);
+  }
+}
+
+// Start server
+async function startServer() {
+  try {
+    // Connect to database first
+    await connectToDatabase();
+    
+    // Start HTTP server
+    const server = app.listen(config.port, () => {
+      logger.info(`Server running in ${config.env} mode on port ${config.port}`);
+      logger.info(`API available at ${config.baseUrl}/api`);
+    });
+    
+    // Handle graceful shutdown
+    const gracefulShutdown = async (signal) => {
+      logger.info(`Received ${signal}. Shutting down gracefully...`);
+      
+      // Close HTTP server first, stop accepting new connections
+      server.close(() => {
+        logger.info('HTTP server closed');
+        
+        // Close database connection
+        mongoose.connection.close(false, () => {
+          logger.info('MongoDB connection closed');
+          process.exit(0);
+        });
+        
+        // Force close if it takes too long
+        setTimeout(() => {
+          logger.error('Could not close connections in time, forcing shutdown');
+          process.exit(1);
+        }, 10000);
+      });
+    };
+    
+    // Attach signal handlers
+    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+    
+    // Handle unhandled promise rejections
+    process.on('unhandledRejection', (reason, promise) => {
+      logger.error('Unhandled Promise Rejection', { reason, promise });
+    });
+    
+    return server;
+  } catch (error) {
+    logger.error(`Server startup error: ${error.message}`, { error });
+    process.exit(1);
+  }
+}
+
+// Only start the server if this file is run directly
+if (require.main === module) {
+  startServer();
+}
+
+module.exports = { app, startServer };

@@ -1,16 +1,30 @@
 /**
- * PDF to XML Converter Entry Point
+ * PDF to XML Converter - Application Entry Point
+ * 
+ * This file serves as the main entry point for the Bankruptcy Form 31 PDF to XML Converter.
+ * It initializes the Express application from src/app.js and starts the HTTP server.
  */
-const app = require('./src/app');
-const port = process.env.PORT || 8080;
+const { app, startServer } = require('./src/app');
+const config = require('./src/config/app');
+const logger = require('./src/utils/logger');
 
-app.listen(port, () => {
-  console.log('---------------------------------------------------');
-  console.log(`PDFtoXMLConverter server started!`);
-  console.log(`Access the application at:`);
-  console.log(`  • http://localhost:${port}`);
-  console.log(`  • http://127.0.0.1:${port}`);
-  console.log('---------------------------------------------------');
-}).on('error', (err) => {
-  console.error('Failed to start server:', err.message);
+// Start the server using the configuration from config/app.js
+startServer()
+  .then(server => {
+    logger.info('---------------------------------------------------');
+    logger.info(`${config.appName} v${config.version} server started!`);
+    logger.info(`Environment: ${config.env}`);
+    logger.info(`Access the application at:`);
+    logger.info(`  • ${config.baseUrl}`);
+    logger.info('---------------------------------------------------');
+  })
+  .catch(error => {
+    logger.error(`Failed to start server: ${error.message}`, { error });
+    process.exit(1);
+  });
+
+// Handle unhandled promise rejections at the top level
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('Unhandled Promise Rejection at top level', { reason, promise });
+  // Don't exit the process here, just log the error
 });
